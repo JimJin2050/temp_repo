@@ -12,6 +12,10 @@
 # Test
 just execute test.rb, it has 3 test cases, to test decode of normal data, data has array and data has tuple.
 
+or 
+
+execute command line: ruby test.rb
+
 # Clarifications
 ## ExecJs and commonjs
 I only could execute pure simple javascript codes, but it always could not require other packages in JS file(I am not quite sure if I implemented it in a correct way). 
@@ -37,6 +41,12 @@ function _bn(val){
   result = new BN(val).toString();
   console.log(result);
   //return result;
+}
+
+function _sha3(data){
+  sha3_data = sha3(data);
+  console.log(sha3_data);
+  //return sha3_Data;
 }
 
 ## The pure Ruby codes is possible if I could understand the logic of encode and decode of ABi
