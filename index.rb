@@ -2,7 +2,8 @@ require 'digest/sha3'
 require 'open3'
 
 # The file path which JS file which contains the functions we need to call
-$js_file_path = '/Users/mac/VSCodes/abi-decoder/jscode/index'
+#$js_file_path = '/Users/mac/VSCodes/abi-decoder/jscode/index'
+$js_file_path = File.dirname(__FILE__) + '/jscode/index'
 
 $state = {
     "savedABIs"=> [],
@@ -33,10 +34,11 @@ def addABI(abiArray)
               # Concat method name and its parameters
               params = abi['name'] +"(" +abi['inputs'].map{|ipt| generate_params(ipt)}.join(",") +")"
               # Generate sha3 signature of method and its params
-              signature = Digest::SHA3.hexdigest(
-                params, 
-                256
-              )
+              # signature = Digest::SHA3.hexdigest(
+              #   params, 
+              #   256
+              # )
+              signature = sha3(params)
             end
             
             # Add abi hash with method signature
@@ -59,10 +61,11 @@ def _removeABI(abiArray)
     abiArray.each do |abi|
         if not abi['name'].nil?
           params = abi['name'] +"(" +abi['inputs'].map{|ipt| generate_params(ipt)}.join(",") +")"
-          signature = Digest::SHA3.hexdigest(
-            params, 
-            256
-          )
+          # signature = Digest::SHA3.hexdigest(
+          #   params, 
+          #   256
+          # )
+          signature = sha3(params)
         end
 
         if abi['type'] == 'event'
@@ -88,9 +91,9 @@ def exec_cmd_and_return(cmd)
 end
 
  # call javascript function "decodeParams", and parse result to ruby data structure
-def decode_params(jsFilePath, inputs, data) 
+def decode_params(inputs, data) 
   ipts = inputs.to_s.gsub("=>", ":").gsub('"', '\"')
-  cmd = "node -e \"require('#{jsFilePath}').decodeParams('#{ipts}', '#{data}')\""
+  cmd = "node -e \"require('#{$js_file_path}').decodeParams('#{ipts}', '#{data}')\""
   output = exec_cmd_and_return(cmd)
 
   result = output.slice(7, output.length).gsub(":", "=>")
@@ -106,10 +109,17 @@ def decode_params(jsFilePath, inputs, data)
 end
 
 # call javascript function "bn", and parse result to ruby data structure
-def bn(jsFilePath, value)
-  cmd = "node -e \"require('#{jsFilePath}').bn('#{value}')\""
+def bn(value)
+  cmd = "node -e \"require('#{$js_file_path}').bn('#{value}')\""
   output = exec_cmd_and_return(cmd)
   return output.to_s
+end
+
+# call javascript function "sha3", and parse result to ruby data structure
+def sha3(data)
+  cmd = "node -e \"require('#{$js_file_path}').sha3('#{data}')\""
+  output = exec_cmd_and_return(cmd).to_s
+  return output.slice(2, output.length)
 end
 
 # decode data according to the specific abi format
@@ -121,7 +131,7 @@ def decodeMethod(data)
 
   if not abiItem.nil?
     # Get decoded data via call JS fucntion
-    decoded = decode_params($js_file_path, abiItem['inputs'], data.slice(10, data.length))
+    decoded = decode_params(abiItem['inputs'], data.slice(10, data.length))
     
     # Init return data
     retData = {
@@ -139,9 +149,9 @@ def decodeMethod(data)
 
       if isUint || isInt
         if param.class == Array
-          parsedParam = param.map{|val| bn($js_file_path, val)}     
+          parsedParam = param.map{|val| bn(val)}     
         else
-          parsedParam = bn($js_file_path, param)
+          parsedParam = bn(param)
         end
       end
 
@@ -161,7 +171,6 @@ def decodeMethod(data)
         "value"=> parsedParam,
         "type"=> abiItem['inputs'][i]['type'],
       }
-      
     end
 
     return retData

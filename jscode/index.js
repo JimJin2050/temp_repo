@@ -14,7 +14,14 @@ function _bn(val){
   //return result;
 }
 
+function _sha3(data){
+  sha3_data = sha3(data);
+  console.log(sha3_data);
+  //return sha3_Data;
+}
+
 module.exports = {
   decodeParams: _decodeParameters,
+  sha3: _sha3,
   bn: _bn,
 };

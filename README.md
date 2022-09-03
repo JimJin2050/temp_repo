@@ -44,3 +44,5 @@ It could be done if really need the version of pure ruby. but I really not good 
 
 
 ## The detailed codes you can find in index.rb
+
+## digest-sha3 can not be called on win10 just like we do on macOS 10.13.6(meet error, I guess it should cause by compatibility issue of different gem version), so I decided to use node JS sha3 function.
